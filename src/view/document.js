@@ -80,6 +80,8 @@ export default class Document {
 		 */
 		this.set( 'isComposing', false );
 
+		this.set( 'isCodeEditing', false );
+
 		/**
 		 * Post-fixer callbacks registered to the view document.
 		 *

@@ -101,6 +101,8 @@ export default class Renderer {
 		 */
 		this.isFocused = false;
 
+		this.isCodeEditing = false;
+
 		/**
 		 * The text node in which the inline filler was rendered.
 		 *
@@ -231,8 +233,10 @@ export default class Renderer {
 			this._inlineFiller = null;
 		}
 
-		this._updateSelection();
-		this._updateFocus();
+		if ( !this.isCodeEditing ) {
+			this._updateSelection();
+			this._updateFocus();
+		}
 
 		this.markedTexts.clear();
 		this.markedAttributes.clear();
