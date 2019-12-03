@@ -171,6 +171,10 @@ export default class Renderer {
 	 * removed as long as the selection is in the text node which needed it at first.
 	 */
 	render() {
+		if ( this.isComposing ) {
+			return;
+		}
+
 		let inlineFillerPosition;
 
 		// Refresh mappings.
@@ -551,14 +555,17 @@ export default class Renderer {
 
 		let i = 0;
 		const nodesToUnbind = new Set();
+		const nodesInserted = new Set();
 
 		for ( const action of diff ) {
 			if ( action === 'insert' ) {
 				insertAt( domElement, i, expectedDomChildren[ i ] );
 				i++;
 			} else if ( action === 'delete' ) {
-				nodesToUnbind.add( actualDomChildren[ i ] );
-				remove( actualDomChildren[ i ] );
+				if ( actualDomChildren[ i ] && !nodesInserted.has( actualDomChildren[ i ] ) ) {
+					nodesToUnbind.add( actualDomChildren[ i ] );
+					remove( actualDomChildren[ i ] );
+				}
 			} else { // 'equal'
 				// Force updating text nodes inside elements which did not change and do not need to be re-rendered (#1125).
 				this._markDescendantTextToSync( this.domConverter.domToView( expectedDomChildren[ i ] ) );
