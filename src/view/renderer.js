@@ -171,10 +171,6 @@ export default class Renderer {
 	 * removed as long as the selection is in the text node which needed it at first.
 	 */
 	render() {
-		if ( this.isComposing ) {
-			return;
-		}
-
 		let inlineFillerPosition;
 
 		// Refresh mappings.
@@ -201,17 +197,21 @@ export default class Renderer {
 			this.markedChildren.add( inlineFillerPosition.parent );
 		}
 
-		for ( const element of this.markedAttributes ) {
-			this._updateAttrs( element );
+		if ( !this.isComposing ) {
+			for ( const element of this.markedAttributes ) {
+				this._updateAttrs( element );
+			}
 		}
 
 		for ( const element of this.markedChildren ) {
 			this._updateChildren( element, { inlineFillerPosition } );
 		}
 
-		for ( const node of this.markedTexts ) {
-			if ( !this.markedChildren.has( node.parent ) && this.domConverter.mapViewToDom( node.parent ) ) {
-				this._updateText( node, { inlineFillerPosition } );
+		if ( !this.isComposing ) {
+			for ( const node of this.markedTexts ) {
+				if ( !this.markedChildren.has( node.parent ) && this.domConverter.mapViewToDom( node.parent ) ) {
+					this._updateText( node, { inlineFillerPosition } );
+				}
 			}
 		}
 
@@ -237,7 +237,7 @@ export default class Renderer {
 			this._inlineFiller = null;
 		}
 
-		if ( !this.isCodeEditing ) {
+		if ( !this.isCodeEditing && !this.isComposing ) {
 			this._updateSelection();
 			this._updateFocus();
 		}
@@ -559,12 +559,16 @@ export default class Renderer {
 
 		for ( const action of diff ) {
 			if ( action === 'insert' ) {
-				insertAt( domElement, i, expectedDomChildren[ i ] );
+				if ( !this.isComposing ) {
+					insertAt( domElement, i, expectedDomChildren[ i ] );
+				}
 				i++;
 			} else if ( action === 'delete' ) {
 				if ( actualDomChildren[ i ] && !nodesInserted.has( actualDomChildren[ i ] ) ) {
 					nodesToUnbind.add( actualDomChildren[ i ] );
-					remove( actualDomChildren[ i ] );
+					if ( !this.isComposing ) {
+						remove( actualDomChildren[ i ] );
+					}
 				}
 			} else { // 'equal'
 				// Force updating text nodes inside elements which did not change and do not need to be re-rendered (#1125).
